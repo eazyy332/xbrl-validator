@@ -1,3 +1,9 @@
+# Taxonomy packages and caches
+assets/taxonomies/**
+assets/cache/**
+assets/logs/**
+exports/**
+
 # Python
 __pycache__/
 *.py[cod]

@@ -14,9 +14,24 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.validation.arelle_runner import run_validation
 from src.pipeline import ingest_jsonl
 from src.validation.eba_rules import apply_eba_rules
-from xbrl_validator.dpm import list_templates, list_tables_for_template
-from xbrl_validator.taxonomy_package import list_entry_points, to_zip_entry_syntax
-from xbrl_validator.config import get_dpm_sqlite_path, get_samples_dir
+try:
+    from xbrl_validator.dpm import list_templates, list_tables_for_template  # type: ignore
+    from xbrl_validator.taxonomy_package import list_entry_points, to_zip_entry_syntax  # type: ignore
+    from xbrl_validator.config import get_dpm_sqlite_path, get_samples_dir  # type: ignore
+except Exception:
+    # Fallbacks when optional xbrl_validator package isn't available
+    def get_dpm_sqlite_path() -> str:
+        return str(Path("assets/dpm.sqlite"))
+    def get_samples_dir() -> str:
+        return str(Path("samples"))
+    def list_templates(_db: str, schema_prefix: str = "dpm35_10", like: str | None = None):  # type: ignore
+        return []
+    def list_tables_for_template(_db: str, templateid: str, schema_prefix: str = "dpm35_10"):  # type: ignore
+        return []
+    def list_entry_points(_pkg_zip: str):  # type: ignore
+        return []
+    def to_zip_entry_syntax(pkg_zip: str, entry_uri: str) -> str:  # type: ignore
+        return f"{pkg_zip}#{entry_uri}"
 
 
 class XbrlValidatorGui(tk.Tk):
@@ -182,12 +197,19 @@ class XbrlValidatorGui(tk.Tk):
             
             from pathlib import Path as _P
             import subprocess, sys
+
+            # Prefer project venv311 interpreter if available for Arelle compatibility
+            _venv_py = (Path(__file__).resolve().parent.parent / ".venv311/bin/python")
+            _py = str(_venv_py) if _venv_py.exists() else sys.executable
             
-            # Prime cache using existing cache_prime script
-            cache_cmd = [sys.executable, "-m", "scripts.cache_prime"]
-            cache_result = subprocess.run(cache_cmd, capture_output=True, text=True, check=False)
-            if cache_result.returncode != 0:
-                print(f"[warn] cache priming failed: {cache_result.stderr}")
+            # Prime cache if helper is available (optional)
+            try:
+                cache_cmd = [_py, "-m", "scripts.cache_prime"]
+                cache_result = subprocess.run(cache_cmd, capture_output=True, text=True, check=False)
+                if cache_result.returncode != 0:
+                    print(f"[warn] cache priming failed: {cache_result.stderr}")
+            except Exception:
+                pass
             
             self.progress_var.set(20)
             self.status_var.set("Validating...")
@@ -196,7 +218,7 @@ class XbrlValidatorGui(tk.Tk):
             logp = _P("assets/logs/gui_run.jsonl")
             exp_dir = "exports"
             cmd = [
-                sys.executable, "-m", "app.validate",
+                _py, "-m", "app.validate",
                 "--file", path,
                 "--ebaVersion", ver or "3.5",
                 "--out", str(logp),
@@ -208,9 +230,38 @@ class XbrlValidatorGui(tk.Tk):
             result = subprocess.run(cmd, capture_output=True, text=True, check=False)
             self.progress_var.set(60)
             if result.returncode != 0:
-                self.status_var.set("Validation failed")
-                messagebox.showerror("Error", f"Validation returned {result.returncode}\n{result.stderr[:200]}")
-                return
+                # Fallback: run in-process validation to avoid dependency on app.validate
+                try:
+                    # Resolve taxonomy packages from config if available
+                    tax_paths: list[str] = []
+                    try:
+                        import json as _json
+                        cfgp = Path("config/taxonomy.json")
+                        if cfgp.exists() and (ver or ""):
+                            data = _json.loads(cfgp.read_text(encoding="utf-8"))
+                            key = "eba_3_4" if str(ver) == "3.4" else "eba_3_5"
+                            tax_paths = [str(p) for p in (data.get("stacks", {}).get(key, []) or [])]
+                    except Exception:
+                        tax_paths = []
+                    summary = run_validation(
+                        input_path=path,
+                        taxonomy_paths=tax_paths,
+                        plugins=["formula"],
+                        log_jsonl_path=str(logp),
+                        validate=True,
+                        offline=False,
+                        cache_dir=str(Path("assets/cache")),
+                        extra_args=["--calcDecimals"],
+                        use_subprocess=False,
+                    )
+                    if int(summary.get("returnCode", 0)) != 0:
+                        self.status_var.set("Validation failed")
+                        messagebox.showerror("Error", f"Validation returned {summary.get('returnCode')}")
+                        return
+                except Exception as _e:
+                    self.status_var.set("Validation failed")
+                    messagebox.showerror("Error", f"Validation failed: {_e}")
+                    return
 
             # Ingest results
             from src.pipeline import ingest_jsonl

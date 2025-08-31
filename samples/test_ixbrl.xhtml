@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" 
+      xmlns:ix="http://www.xbrl.org/2013/inlineXBRL"
+      xmlns:ixt="http://www.xbrl.org/inlineXBRL/transformation/2020-02-12"
+      xmlns:xbrli="http://www.xbrl.org/2003/instance"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      xmlns:iso4217="http://www.xbrl.org/2003/iso4217"
+      xmlns:sample="http://example.com/sample">
+<head>
+    <meta charset="utf-8"/>
+    <title>Sample iXBRL Document</title>
+    <ix:header>
+        <ix:references>
+            <ix:schemaRef xlink:type="simple" xlink:href="sample-schema.xsd"/>
+        </ix:references>
+        <ix:resources>
+            <xbrli:context id="ctx1">
+                <xbrli:entity>
+                    <xbrli:identifier scheme="http://example.com/entity">SAMPLE001</xbrli:identifier>
+                </xbrli:entity>
+                <xbrli:period>
+                    <xbrli:instant>2024-12-31</xbrli:instant>
+                </xbrli:period>
+            </xbrli:context>
+            <xbrli:unit id="usd">
+                <xbrli:measure>iso4217:USD</xbrli:measure>
+            </xbrli:unit>
+        </ix:resources>
+    </ix:header>
+</head>
+<body>
+    <h1>Sample Financial Report</h1>
+    
+    <p>The company's total revenue for the year was 
+    <ix:nonNumeric contextRef="ctx1" name="sample:CompanyName">Sample Corp</ix:nonNumeric>
+    reported revenue of 
+    <ix:nonFraction contextRef="ctx1" name="sample:Revenue" unitRef="usd" decimals="0" format="ixt:numdotdecimal">1,250,000</ix:nonFraction>
+    for the period ended December 31, 2024.</p>
+    
+    <p>Net income was 
+    <ix:nonFraction contextRef="ctx1" name="sample:NetIncome" unitRef="usd" decimals="0" format="ixt:numdotdecimal">125,000</ix:nonFraction>
+    <ix:footnote id="fn1">This includes one-time gains of $25,000.</ix:footnote>
+    </p>
+    
+    <div>
+        <ix:continuation id="cont1">
+            <p>Additional disclosures continue here with 
+            <ix:nonFraction contextRef="ctx1" name="sample:Assets" unitRef="usd" decimals="0" format="ixt:numdotdecimal" continuedAt="cont1">5,000,000</ix:nonFraction>
+            in total assets.</p>
+        </ix:continuation>
+    </div>
+    
+    <ix:footnote id="fn1-detail">
+        <p>One-time gains resulted from asset disposal and are not expected to recur.</p>
+    </ix:footnote>
+</body>
+</html>
