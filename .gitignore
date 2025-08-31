@@ -1,0 +1,115 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+log.jsonl
+
+# Data files
+*.jsonl
+*.json
+*.csv
+*.xlsx
+*.xls
+*.xml
+*.zip
+*.tar.gz
+
+# Validation outputs
+validation_output/
+validation_output.jsonl
+validation.jsonl
+batch*.jsonl
+dora_*.jsonl
+comprehensive_*.jsonl
+improved_*.jsonl
+large_file_*.jsonl
+test_*.jsonl
+run.jsonl
+final_*.jsonl
+nsfr34.jsonl
+formula_*.jsonl
+
+# Build artifacts
+build/
+dist/
+*.pyc
+*.pyo
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuration with sensitive data
+config/local.py
+config/production.py
+.env
+.env.local
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Documentation build
+docs/_build/
+site/
+
+# Test coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
